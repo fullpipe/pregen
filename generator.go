@@ -19,6 +19,14 @@ func NewGenerator[T any](
 	genFunc func() (T, error),
 	options ...Option[T],
 ) (*Generator[T], func()) {
+	return NewGeneratorContext(genFunc, context.Background(), options...)
+}
+
+func NewGeneratorContext[T any](
+	genFunc func() (T, error),
+	ctx context.Context,
+	options ...Option[T],
+) (*Generator[T], func()) {
 	generator := &Generator[T]{
 		genFunc:       genFunc,
 		gc:            nil,
@@ -34,7 +42,7 @@ func NewGenerator[T any](
 		generator.gc = make(chan T, DefaultPregenSize)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
 
 	go func() {
 		defer close(generator.gc)
